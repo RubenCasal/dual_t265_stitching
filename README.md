@@ -8,6 +8,19 @@ Although this implementation has been tailored for the Intel RealSense T265, it 
 
 The class handles lens distortion correction, stereographic or rectilinear dewarping, gain-adjusted blending, and seamless image stitching. All processing steps are optimized for real-time execution, making it ideal for robotics, panoramic vision systems, or immersive computer vision applications.
 
+
+## 🛠️ **Clone and build**
+
+```bash
+cd ~/ros2_ws/src
+git clone https://github.com/RubenCasal/dual_t265_stitching.git
+cd ~/ros2_ws
+colcon build --packages-select dual_t265_stitching
+source install/setup.bash
+```
+
+---
+
 ## 🔧 Class Initialization
 
 ### **Parameters**
@@ -120,3 +133,4 @@ ros2 run dual_t265_stitching dual_t265_node
 ros2 run dual_t265_stitching stitcher_node.py
 ```
 
+## Workflow

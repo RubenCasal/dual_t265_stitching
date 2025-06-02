@@ -1,4 +1,5 @@
-# DualFisheteStitcher Class
+# DualFisheyeStitcher Class
+
 ## 📌 Introduction
 
 The `DualFisheyeStitcher` class is designed to perform real-time dewarping and stitching of fisheye images from a dual-camera setup. It assumes both cameras are positioned on the same horizontal plane and have a horizontal field-of-view overlap.
@@ -46,6 +47,17 @@ After determining the horizontal overlap, this method finds the optimal vertical
 ### `save_calibration_result`
 
 Once the horizontal and vertical alignment parameters are estimated, this method allows you to persist them into a text file for future use. It appends the calculated overlap ratio and vertical shift (`dy`) into the file specified. Useful for debugging, logging, or applying the calibration in later sessions without recalculating.
+
+### LaunchFiles
+```bash
+ros2 launch dual_t265_stitching dual_fisheye_launch.py
+```
+
+### Run Nodes
+```bash
+ros2 run dual_t265_stitching dual_t265_node
+ros2 run dual_t265_stitching overlap_calibration.py
+```
 
 ### 🌀 Dewarping Methods
 
@@ -95,3 +107,16 @@ Stitches two dewarped grayscale fisheye images into a seamless panoramic image u
 * Concatenates the non-overlapping parts of the two images into the final stitched result.
 
 This method ensures both geometric alignment and photometric consistency, minimizing visible seams or brightness mismatches.
+
+
+### LaunchFiles
+```bash
+ros2 launch dual_t265_stitching dual_fisheye_launch.py
+```
+
+### Run Nodes
+```bash
+ros2 run dual_t265_stitching dual_t265_node
+ros2 run dual_t265_stitching stitcher_node.py
+```
+

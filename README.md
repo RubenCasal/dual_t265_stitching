@@ -1,3 +1,12 @@
+# DualFisheteStitcher Class
+## 📌 Introduction
+
+The `DualFisheyeStitcher` class is designed to perform real-time dewarping and stitching of fisheye images from a dual-camera setup. It assumes both cameras are positioned on the same horizontal plane and have a horizontal field-of-view overlap.
+
+Although this implementation has been tailored for the Intel RealSense T265, it is fully adaptable to any pair of fisheye cameras as long as their intrinsic and distortion parameters are known.
+
+The class handles lens distortion correction, stereographic or rectilinear dewarping, gain-adjusted blending, and seamless image stitching. All processing steps are optimized for real-time execution, making it ideal for robotics, panoramic vision systems, or immersive computer vision applications.
+
 ## 🔧 Class Initialization
 
 ### **Parameters**

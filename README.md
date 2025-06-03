@@ -1,4 +1,4 @@
-# DualFisheyeStitcher Class
+# 📷 DualFisheyeStitcher Class - Real-Time Fisheye Image Stitching
 
 ##  Introduction
 
@@ -21,7 +21,7 @@ source install/setup.bash
 
 ---
 
-## 🔧 Class Initialization
+## Class Initialization
 
 ### **Parameters**
 
@@ -53,14 +53,17 @@ This class provides tools to automatically calibrate the stitching between two f
 
 This method estimates the horizontal overlap percentage between the left and right dewarped images. It works by sliding one image over the other (horizontally) across a defined range (`max_offset`) and computes the Structural Similarity Index (SSIM) for each alignment. The shift that yields the highest SSIM is considered the best overlap position. The overlap ratio is computed as the absolute value of this shift divided by the image width.
 
+---
 ### `estimate_vertical_shift_ssim`
 
 After determining the horizontal overlap, this method finds the optimal vertical alignment (dy) between the overlapping regions of the two images. It extracts the overlapping band from both images and applies vertical shifts to one of them. For each shift, it computes the SSIM with the other image. The vertical displacement that produces the highest SSIM score is returned as the optimal `dy`. This value ensures that both views are vertically aligned for seamless stitching.
 
+---
 ### `save_calibration_result`
 
 Once the horizontal and vertical alignment parameters are estimated, this method allows you to persist them into a text file for future use. It appends the calculated overlap ratio and vertical shift (`dy`) into the file specified. Useful for debugging, logging, or applying the calibration in later sessions without recalculating.
 
+---
 ### LaunchFiles
 ```bash
 ros2 launch dual_t265_stitching dual_fisheye_launch.py
@@ -72,13 +75,13 @@ ros2 run dual_t265_stitching dual_t265_node
 ros2 run dual_t265_stitching overlap_calibration.py
 ```
 
-### Dewarping Methods
+## Dewarping Methods
 
 This class implements multiple fisheye dewarping methods using precomputed lookup tables (LUTs) for fast remapping and distortion correction.
 
 ---
 
-#### `build_stereographic_undistort_map_soft_fov(...)`
+### `build_stereographic_undistort_map_soft_fov(...)`
 
 Builds a remap (LUT) for stereographic projection, reducing the field of view to suppress edge distortions. It uses the intrinsic and distortion parameters of a fisheye camera and creates a mapping from an ideal stereographic projection to distorted fisheye coordinates. This allows you to later apply `cv2.remap()` efficiently.
 
@@ -91,7 +94,7 @@ Internally:
 
 ---
 
-#### `fast_equirectangular_dewarping(frame, camera_id)`
+### `fast_equirectangular_dewarping(frame, camera_id)`
 
 Applies a precomputed remap (from `build_stereographic_undistort_map_soft_fov`) to transform a fisheye image into a stereographic projection.
 
@@ -108,6 +111,7 @@ This method is optimized for real-time performance.
 ### `stitch_blend_optimized(left_img, right_img)`
 
 Stitches two dewarped grayscale fisheye images into a seamless panoramic image using linear alpha blending and automatic gain correction.
+
 
 **How it works:**
 

@@ -84,14 +84,14 @@ class OverlapCalibrationNode(Node):
         # Suscripciones
         self.subscription_left = self.create_subscription(
             Image,
-            "/camera1/fisheye_left",
+            "/camera2/fisheye_left",
             self.image_callback_left,
             qos_profile_sensor_data
         )
 
         self.subscription_right = self.create_subscription(
             Image,
-            "/camera2/fisheye_left",
+            "/camera1/fisheye_left",
             self.image_callback_right,
             qos_profile_sensor_data
         )

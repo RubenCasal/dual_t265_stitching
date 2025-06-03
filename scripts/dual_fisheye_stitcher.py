@@ -13,9 +13,9 @@ class DualFisheyeStitcher:
         self.vertical_correction = vertical_correction
         self.blending_ratio = blending_ratio
 
-        self.output_size = (1000,1000)
-        self.dewarped_width = 1000
-        self.dewarped_height = 1000
+        self.output_size = (960,720)
+        self.dewarped_width = 960
+        self.dewarped_height = 720
         # Shape of the raw fisheye frames
         self.frame_width = frame_width
         self.frame_height = frame_height
@@ -37,13 +37,14 @@ class DualFisheyeStitcher:
 
         
         # Precompute LUT for camera1
-        self.map_x1, self.map_y1 = self.build_stereographic_undistort_map_soft_fov(self.K_cam1, self.D_cam1,self.output_size, self.fov1)
+        self.map_x1, self.map_y1 = self.build_partial_equirectangular_map(self.K_cam1, self.D_cam1,self.output_size, self.fov1)
 
         # Precompute LUT for camera2
-        self.map_x2, self.map_y2 = self.build_stereographic_undistort_map_soft_fov(self.K_cam2, self.D_cam2,self.output_size, self.fov2)
+        self.map_x2, self.map_y2 = self.build_partial_equirectangular_map(self.K_cam2, self.D_cam2,self.output_size, self.fov2)
 
         # Rotate 180 degrees one of the cameras
         self.map_x1 = cv2.flip(self.map_x1, -1)
+        
         self.map_y1 = cv2.flip(self.map_y1, -1)
 
 
@@ -193,12 +194,81 @@ class DualFisheyeStitcher:
 
     ####################### DEWARP METHODS #################
 
+    def build_partial_equirectangular_map(
+    self,
+    K_fisheye,
+    D_fisheye,
+    output_size,
+    fov_deg=(120, 90),  # horizontal, vertical FOV en grados
+    cx=None,
+    cy=None
+):
+        """
+        Builds an undistortion map using partial equirectangular projection.
+
+        Args:
+            K_fisheye (np.ndarray): Intrinsic matrix of the fisheye camera.
+            D_fisheye (np.ndarray): Distortion coefficients (k1, k2, k3, k4).
+            output_size (tuple): (width, height) of the ERP output image.
+            fov_deg (tuple): (horizontal, vertical) FOV in degrees.
+            cx, cy (float, optional): Principal point (override K_fisheye).
+
+        Returns:
+            tuple[np.ndarray, np.ndarray]: Remap matrices (map_x, map_y).
+        """
+        width, height = output_size
+        fov_x = np.radians(fov_deg[0])
+        fov_y = np.radians(fov_deg[1])
+
+        cx = float(K_fisheye[0, 2]) if cx is None else float(cx)
+        cy = float(K_fisheye[1, 2]) if cy is None else float(cy)
+        fx = float(K_fisheye[0, 0])
+        fy = float(K_fisheye[1, 1])
+        k1, k2, k3, k4 = D_fisheye.flatten()
+
+        map_x = np.zeros((height, width), dtype=np.float32)
+        map_y = np.zeros((height, width), dtype=np.float32)
+
+        for y in range(height):
+            theta = (y / (height - 1) - 0.5) * fov_y
+            for x in range(width):
+                phi = (x / (width - 1) - 0.5) * fov_x
+
+                X = np.cos(theta) * np.sin(phi)
+                Y = np.sin(theta)
+                Z = np.cos(theta) * np.cos(phi)
+
+                r = np.arccos(Z)
+                if r == 0:
+                    x_dist = 0
+                    y_dist = 0
+                else:
+                    norm = r / np.sqrt(X**2 + Y**2)
+                    x_theta = X * norm
+                    y_theta = Y * norm
+
+                    r2 = x_theta**2 + y_theta**2
+                    theta_d = r * (1 + k1*r2 + k2*r2**2 + k3*r2**3 + k4*r2**4)
+
+                    scale = theta_d / r if r != 0 else 1.0
+                    x_dist = x_theta * scale
+                    y_dist = y_theta * scale
+
+                u = fx * x_dist + cx
+                v = fy * y_dist + cy
+
+                map_x[y, x] = u
+                map_y[y, x] = v
+
+        return map_x, map_y
+
+
     def build_stereographic_undistort_map_soft_fov(self,
             K_fisheye,
             D_fisheye,
             output_size,
             fov_deg=(90, 60),
-            fov_margin=0.90,  # 90% of original FOV
+            fov_margin=0.99,  # 90% of original FOV
             cx=None,
             cy=None
         ):

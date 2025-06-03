@@ -1,6 +1,6 @@
 # DualFisheyeStitcher Class
 
-## 📌 Introduction
+##  Introduction
 
 The `DualFisheyeStitcher` class is designed to perform real-time dewarping and stitching of fisheye images from a dual-camera setup. It assumes both cameras are positioned on the same horizontal plane and have a horizontal field-of-view overlap.
 
@@ -9,7 +9,7 @@ Although this implementation has been tailored for the Intel RealSense T265, it 
 The class handles lens distortion correction, stereographic or rectilinear dewarping, gain-adjusted blending, and seamless image stitching. All processing steps are optimized for real-time execution, making it ideal for robotics, panoramic vision systems, or immersive computer vision applications.
 
 
-## 🛠️ **Clone and build**
+##  **Clone and build**
 
 ```bash
 cd ~/ros2_ws/src
@@ -72,13 +72,13 @@ ros2 run dual_t265_stitching dual_t265_node
 ros2 run dual_t265_stitching overlap_calibration.py
 ```
 
-### 🌀 Dewarping Methods
+### Dewarping Methods
 
 This class implements multiple fisheye dewarping methods using precomputed lookup tables (LUTs) for fast remapping and distortion correction.
 
 ---
 
-#### 🔧 `build_stereographic_undistort_map_soft_fov(...)`
+#### `build_stereographic_undistort_map_soft_fov(...)`
 
 Builds a remap (LUT) for stereographic projection, reducing the field of view to suppress edge distortions. It uses the intrinsic and distortion parameters of a fisheye camera and creates a mapping from an ideal stereographic projection to distorted fisheye coordinates. This allows you to later apply `cv2.remap()` efficiently.
 
@@ -91,7 +91,7 @@ Internally:
 
 ---
 
-#### ⚡ `fast_equirectangular_dewarping(frame, camera_id)`
+#### `fast_equirectangular_dewarping(frame, camera_id)`
 
 Applies a precomputed remap (from `build_stereographic_undistort_map_soft_fov`) to transform a fisheye image into a stereographic projection.
 
@@ -101,13 +101,11 @@ Applies a precomputed remap (from `build_stereographic_undistort_map_soft_fov`) 
 This method is optimized for real-time performance.
 
 ---
-### 🧵 Stitching Method
+## Stitching Methods
 
-This class provides a high-quality image stitching method for dual dewarped fisheye frames.
 
----
 
-#### 🪄 `stitch_blend_optimized(left_img, right_img)`
+### `stitch_blend_optimized(left_img, right_img)`
 
 Stitches two dewarped grayscale fisheye images into a seamless panoramic image using linear alpha blending and automatic gain correction.
 

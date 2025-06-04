@@ -1,4 +1,4 @@
-# 📷 DualFisheyeStitcher Class - Real-Time Fisheye Image Stitching skere
+# 📷 DualFisheyeStitcher Class - Real-Time Fisheye Image Stitching 
 
 ##  Introduction
 

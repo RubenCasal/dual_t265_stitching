@@ -49,14 +49,22 @@ These precomputations enable real-time stitching with high accuracy and performa
 
 This class provides tools to automatically calibrate the stitching between two fisheye cameras using SSIM-based analysis. These methods allow us to estimate both horizontal and vertical misalignments in the captured views.
 
-### `compute_overlap_ssim`
+### `estimate_overlap_ssim_partial`
 
-This method estimates the horizontal overlap percentage between the left and right dewarped images. It works by sliding one image over the other (horizontally) across a defined range (`max_offset`) and computes the Structural Similarity Index (SSIM) for each alignment. The shift that yields the highest SSIM is considered the best overlap position. The overlap ratio is computed as the absolute value of this shift divided by the image width.
+This method estimates the horizontal overlap percentage between the left and right dewarped images by focusing exclusively on their bordering regions. Specifically, it compares the right edge of the left image and the left edge of the right image using SSIM to find the best match.
+
+It iteratively shifts the overlapping edge patches over a specified max_offset range and calculates the SSIM score for each alignment. The shift yielding the highest SSIM score determines the best horizontal alignment. The overlap ratio is then computed as the number of overlapping pixels (best_offset) divided by the image width.
+
+**Returns**: A float representing the overlap percentage in the range [0, 1].
 
 ---
-### `estimate_vertical_shift_ssim`
+### `estimate_vertical_misalignment`
 
-After determining the horizontal overlap, this method finds the optimal vertical alignment (dy) between the overlapping regions of the two images. It extracts the overlapping band from both images and applies vertical shifts to one of them. For each shift, it computes the SSIM with the other image. The vertical displacement that produces the highest SSIM score is returned as the optimal `dy`. This value ensures that both views are vertically aligned for seamless stitching.
+This method estimates vertical misalignment (in pixels) between two grayscale images by sliding one image vertically relative to the other and computing SSIM for each offset.
+
+It searches within a max_shift range in both directions (up/down) and returns the shift (dy) that maximizes similarity. A positive return value indicates the right image should be shifted downward for alignment.
+
+**Returns**: An integer dy representing the number of pixels to shift the right image vertically.
 
 ---
 ### `save_calibration_result`
@@ -81,16 +89,29 @@ This class implements multiple fisheye dewarping methods using precomputed looku
 
 ---
 
-### `build_stereographic_undistort_map_soft_fov(...)`
+### `build_partial_equirectangular_map`
 
-Builds a remap (LUT) for stereographic projection, reducing the field of view to suppress edge distortions. It uses the intrinsic and distortion parameters of a fisheye camera and creates a mapping from an ideal stereographic projection to distorted fisheye coordinates. This allows you to later apply `cv2.remap()` efficiently.
+This method generates an undistortion map to convert a fisheye image into a partial equirectangular projection (ERP), useful for panoramic or wide-angle image processing pipelines.
 
-Internally:
+Unlike a full ERP that covers 360° horizontally and 180° vertically, this method maps only a selected field of view (`fov_deg`) into a 2D plane, producing a compact and computationally efficient representation. The generated remap matrices are intended to be used with `cv2.remap()`.
 
-* Converts each undistorted pixel to spherical coordinates.
-* Applies a fisheye distortion model.
-* Computes the corresponding distorted coordinates using the fisheye camera intrinsics.
-* Returns two matrices `map_x` and `map_y` used for remapping.
+**Parameters:**
+
+* `K_fisheye (np.ndarray)`: The 3x3 intrinsic matrix of the fisheye camera.
+* `D_fisheye (np.ndarray)`: The 4-element distortion coefficients (k1, k2, k3, k4).
+* `output_size (tuple)`: Desired (width, height) of the undistorted image.
+* `fov_deg (tuple)`: Horizontal and vertical field of view in degrees. Default is (120, 90).
+* `cx, cy (float, optional)`: Override the camera principal point. If not provided, values from `K_fisheye` are used.
+
+**How it works:**
+
+* Each output pixel is interpreted as a direction vector on a unit sphere, defined by azimuth (`phi`) and elevation (`theta`) angles.
+* These spherical directions are converted to 3D Cartesian coordinates.
+* The direction vectors are projected into the distorted fisheye plane using the inverse of the fisheye projection model.
+* Distortion is applied analytically using the standard polynomial fisheye model.
+* Final distorted coordinates are mapped into pixel coordinates using the intrinsic matrix.
+
+**Returns:** A tuple of remap matrices `(map_x, map_y)` for `cv2.remap()` to produce the ERP view.
 
 ---
 

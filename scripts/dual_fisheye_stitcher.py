@@ -251,66 +251,6 @@ class DualFisheyeStitcher:
         return map_x, map_y
 
 
-    def build_stereographic_undistort_map_soft_fov(self,
-            K_fisheye,
-            D_fisheye,
-            output_size,
-            fov_deg=(90, 60),
-            fov_margin=0.99,  # 90% of original FOV
-            cx=None,
-            cy=None
-        ):
-        """
-        Builds stereographic undistortion map with reduced FOV to suppress edge artifacts.
-
-        Args:
-            K_fisheye (np.ndarray): Intrinsic matrix of the fisheye camera.
-            D_fisheye (np.ndarray): Distortion coefficients (k1, k2, k3, k4).
-            output_size (tuple): (width, height) of the undistorted output.
-            fov_deg (tuple): Desired (horizontal, vertical) FOV in degrees.
-            fov_margin (float): Fraction of original FOV to use (e.g., 0.90 = 90%).
-            cx (float, optional): Optical center x (overrides K_fisheye if provided).
-            cy (float, optional): Optical center y (overrides K_fisheye if provided).
-
-        Returns:
-            tuple[np.ndarray, np.ndarray]: Remap matrices (map_x, map_y) for cv2.remap.
-        """
-        width, height = output_size
-        fov_x, fov_y = np.radians(fov_deg[0] * fov_margin), np.radians(fov_deg[1] * fov_margin)
-
-        fx = (width / 2) / np.tan(fov_x / 2)
-        fy = (height / 2) / np.tan(fov_y / 2)
-        cx_out = width / 2
-        cy_out = height / 2
-
-        cx = float(K_fisheye[0, 2]) if cx is None else float(cx)
-        cy = float(K_fisheye[1, 2]) if cy is None else float(cy)
-
-        k1, k2, k3, k4 = [float(k) for k in D_fisheye.flatten()]
-        map_x = np.zeros((height, width), dtype=np.float32)
-        map_y = np.zeros((height, width), dtype=np.float32)
-
-        for y in range(height):
-            for x in range(width):
-                x_r = (x - cx_out) / fx
-                y_r = (y - cy_out) / fy
-                r = np.sqrt(x_r ** 2 + y_r ** 2)
-
-                theta = 2 * np.arctan(r / 2) if r != 0 else 0.0
-                theta_d = theta * (1 + k1 * theta**2 + k2 * theta**4 + k3 * theta**6 + k4 * theta**8)
-
-                scale = theta_d / r if r != 0 else 0.0
-                x_f = x_r * scale
-                y_f = y_r * scale
-
-                u = K_fisheye[0, 0] * x_f + cx
-                v = K_fisheye[1, 1] * y_f + cy
-
-                map_x[y, x] = u
-                map_y[y, x] = v
-
-        return map_x, map_y
-
 
 
     def fast_equirectangular_dewarping(self, frame, camera_id):
@@ -336,80 +276,7 @@ class DualFisheyeStitcher:
         return undistorted_image
 
     
-    def build_rectilinear_undistort_map(self, K_fisheye, D_fisheye, 
-                                        output_size, fov_deg, 
-                                        cx=None, cy=None):
-        """
-        Generates map_x, map_y to unwarp a fisheye image into a rectilinear (pinhole-like) image.
-
-        Args:
-            K_fisheye (np.ndarray): Intrinsic matrix of fisheye camera.
-            D_fisheye (np.ndarray): Distortion coefficients (k1, k2, k3, k4).
-            output_size (tuple): (width, height) of the desired undistorted image.
-            fov_deg (tuple): (horizontal_FOV, vertical_FOV) of the output image in degrees.
-            cx, cy: center of the distorted image (if None, taken from K).
-
-        Returns:
-            map_x, map_y: mapping matrices for cv2.remap()
-        """
-        width, height = output_size
-        fov_x, fov_y = np.radians(fov_deg[0]), np.radians(fov_deg[1])
-        
-        # Intrinsics of the rectilinear output (pinhole model)
-        fx = (width / 2) / np.tan(fov_x / 2)
-        fy = (height / 2) / np.tan(fov_y / 2)
-        cx_out = width / 2
-        cy_out = height / 2
-
-        # Source image center (from K)
-        if cx is None:
-            cx = K_fisheye[0, 2]
-        if cy is None:
-            cy = K_fisheye[1, 2]
-
-        map_x = np.zeros((height, width), dtype=np.float32)
-        map_y = np.zeros((height, width), dtype=np.float32)
-
-        k1, k2, k3, k4 = D_fisheye.flatten()
-
-        for y in range(height):
-            for x in range(width):
-                # Normalized coordinates in output rectilinear image
-                x_r = (x - cx_out) / fx
-                y_r = (y - cy_out) / fy
-
-                r = np.sqrt(x_r ** 2 + y_r ** 2)
-                if r == 0:
-                    theta = 0
-                else:
-                    theta = np.arctan(r)
-
-                # Fisheye distortion model (equidistant)
-                theta_d = theta * (1 + k1 * theta**2 + k2 * theta**4 + k3 * theta**6 + k4 * theta**8)
-
-                if r != 0:
-                    scale = theta_d / r
-                    x_f = x_r * scale
-                    y_f = y_r * scale
-                else:
-                    x_f = 0
-                    y_f = 0
-
-                # Project back to distorted image pixel coordinates
-                u = K_fisheye[0, 0] * x_f + cx
-                v = K_fisheye[1, 1] * y_f + cy
-
-                map_x[y, x] = u
-                map_y[y, x] = v
-
-
-        return map_x, map_y  
-    
-    def dewarp_image(self,frame):
-
-        undist = self.fast_equirectangular_dewarping(frame,1)
-
-        return undist
+   
         
         
     ############   STITCHING METHODS    #############

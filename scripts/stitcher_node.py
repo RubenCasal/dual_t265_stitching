@@ -156,8 +156,8 @@ class StitchingNode(Node):
 
         try:
             # Save raw images for offline testing/debugging
-            cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/final_left.png", self.last_left)
-            cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/final_right.png", self.last_right)
+            #cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/final_left.png", self.last_left)
+            #cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/final_right.png", self.last_right)
 
             stiched_image = self.dual_stitcher.stitch_blend_optimized(self.last_left, self.last_right)
     

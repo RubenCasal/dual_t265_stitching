@@ -151,7 +151,7 @@ class OverlapCalibrationNode(Node):
         overlap_pct = self.dual_stitcher.estimate_overlap_ssim_partial(left,right)
 
         # Misalignment in the y-axis
-        best_dy = self.dual_stitcher.estimate_vertical_shift_ssim(left, right, overlap_pct)
+        best_dy = self.dual_stitcher.estimate_vertical_misalignment(left, right, overlap_pct)
         
 
         self.get_logger().info(f"📐 Estimated horizontal overlap: {overlap_pct:.2%}")

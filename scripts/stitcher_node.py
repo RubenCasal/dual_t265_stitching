@@ -80,7 +80,7 @@ class StitchingNode(Node):
             fov_v2 = fov_v2,
             overlaping_region=0.135,
             blending_ratio = 0.1,
-            vertical_correction=1
+            vertical_correction=7
         )
 
         # Subscribe to fisheye cameras topics

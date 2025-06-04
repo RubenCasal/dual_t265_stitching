@@ -50,7 +50,7 @@ class DualFisheyeStitcher:
 
 
         ############### STITCHING PARAMETERS INITIALISATION #############
-        if self.overlaping_region and self.blending_ratio and self.vertical_correction:
+        if self.overlaping_region and self.blending_ratio:
             # Blending ratio
             self.blending_ratio = blending_ratio
 
@@ -71,7 +71,7 @@ class DualFisheyeStitcher:
 
     ############   CALIBRATION METHODS    #############
     
-    def estimate_vertical_misalignment(left_img: np.ndarray, right_img: np.ndarray, max_shift: int = 50) -> int:
+    def estimate_vertical_misalignment(self, left_img, right_img, max_shift=50.0):
         """
         Estimates vertical misalignment (in pixels) between two grayscale images using SSIM.
 
@@ -89,7 +89,8 @@ class DualFisheyeStitcher:
         best_score = -1.0
         best_offset_y = 0
 
-        for dy in range(-max_shift, max_shift + 1):
+        for dy in range(-int(max_shift), int(max_shift) + 1):
+
             if dy < 0:
                 l_patch = left_img[:h + dy, :]
                 r_patch = right_img[-dy:, :]
@@ -113,6 +114,8 @@ class DualFisheyeStitcher:
                 best_offset_y = dy
 
         return best_offset_y
+    
+
     def estimate_overlap_ssim_partial(self, left_img, right_img, max_offset=200):
         """
         Compute horizontal overlap (%) between two grayscale images by comparing
@@ -298,7 +301,8 @@ class DualFisheyeStitcher:
         # Symmetric crop
         left_cropped = left_img[:, :w - self.trim_half]
         right_cropped = right_img[:, self.trim_half:]
-        right_cropped = np.roll(right_cropped, self.vertical_correction, axis=0)
+        if self.vertical_correction != 0:
+            right_cropped = np.roll(right_cropped, self.vertical_correction, axis=0)
 
         # Gain correction (Brightness)
         mean_left = np.mean(left_cropped[:, -self.blend_px:])

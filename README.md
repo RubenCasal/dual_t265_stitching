@@ -57,6 +57,11 @@ It iteratively shifts the overlapping edge patches over a specified max_offset r
 
 **Returns**: A float representing the overlap percentage in the range [0, 1].
 
+
+<p align="center">
+<img src="./readme_images/calibrate_overlaping.png" alt="Calculate Overlaping Region" width="650">
+</p>
+
 ---
 ### `estimate_vertical_misalignment`
 
@@ -70,6 +75,12 @@ It searches within a max_shift range in both directions (up/down) and returns th
 ### `save_calibration_result`
 
 Once the horizontal and vertical alignment parameters are estimated, this method allows you to persist them into a text file for future use. It appends the calculated overlap ratio and vertical shift (`dy`) into the file specified. Useful for debugging, logging, or applying the calibration in later sessions without recalculating.
+
+
+<p align="center">
+<img src="./readme_images/calibration_file.png" alt="Calibration file" width="450">
+</p>
+
 
 ---
 ### LaunchFiles
@@ -113,16 +124,29 @@ Unlike a full ERP that covers 360° horizontally and 180° vertically, this meth
 
 **Returns:** A tuple of remap matrices `(map_x, map_y)` for `cv2.remap()` to produce the ERP view.
 
+
+<p align="center">
+<img src="./readme_images/projection_explanation.png" alt="Diagram equirectangular proyection" width="600">
+</p>
+
+
 ---
 
 ### `fast_equirectangular_dewarping(frame, camera_id)`
 
-Applies a precomputed remap (from `build_stereographic_undistort_map_soft_fov`) to transform a fisheye image into a stereographic projection.
+Applies a precomputed remap (from `build_partial_equirectangular_map`) to transform a fisheye image into a stereographic projection.
 
 * Selects the remap based on the camera ID.
 * Applies `cv2.remap()` for efficient pixel-wise undistortion.
 
 This method is optimized for real-time performance.
+
+
+
+<p align="center">
+<img src="./readme_images/equirectangular_proyection.gif" alt="Equirectangular_proyeciton" width="600">
+</p>
+
 
 ---
 ## Stitching Methods
@@ -145,6 +169,11 @@ Stitches two dewarped grayscale fisheye images into a seamless panoramic image u
 This method ensures both geometric alignment and photometric consistency, minimizing visible seams or brightness mismatches.
 
 
+<p align="center">
+<img src="./readme_images/stitching.gif" alt="Stitching" width="600">
+</p>
+
+
 ### LaunchFiles
 ```bash
 ros2 launch dual_t265_stitching dual_fisheye_launch.py
@@ -157,3 +186,22 @@ ros2 run dual_t265_stitching stitcher_node.py
 ```
 
 ## Workflow
+
+<p align="center">
+<img src="./readme_images/calibration.drawio.png" alt="Calibration workflow" width="650">
+</p>
+
+<p align="center">
+<img src="./readme_images/dual_stitching_workflow.drawio(1).png" alt="Stitching workflow" width="650">
+</p>
+
+# Final Result
+
+
+<p align="center">
+<img src="./readme_images/setup.jpg" alt="Stitching workflow" width="450">
+</p>
+
+<p align="center">
+<img src="./readme_images/final_result.gif" alt="Stitching workflow" width="650">
+</p>

@@ -71,108 +71,96 @@ class DualFisheyeStitcher:
 
     ############   CALIBRATION METHODS    #############
     
-    def estimate_vertical_shift_ssim(self,
-        left_img,
-        right_img,
-        real_overlap_ratio,
-        blending_ratio=0.08,
-        max_dy=25,
-        min_valid_width=10
-    ):
+    def estimate_vertical_misalignment(left_img: np.ndarray, right_img: np.ndarray, max_shift: int = 50) -> int:
         """
-        Estimates the optimal vertical shift (dy) between two images using SSIM
-        over the overlapping region.
+        Estimates vertical misalignment (in pixels) between two grayscale images using SSIM.
 
         Args:
-            left_img (np.ndarray): Left dewarped image (normalized or uint8).
-            right_img (np.ndarray): Right dewarped image (normalized or uint8).
-            real_overlap_ratio (float): Horizontal overlap ratio between images (0–1).
-            blending_ratio (float): Ratio of blending width relative to image width.
-            max_dy (int): Maximum vertical shift to test (in pixels).
-            min_valid_width (int): Minimum width to accept as a valid patch.
+            left_img (np.ndarray): Left image.
+            right_img (np.ndarray): Right image.
+            max_shift (int): Maximum vertical shift in pixels to test.
 
         Returns:
-            int: Optimal vertical shift (dy) maximizing SSIM.
+            int: Optimal vertical offset (positive means right image should shift down).
         """
-        assert left_img.shape == right_img.shape, "Input images must have the same shape"
-
-        # Convert normalized images back to uint8 for SSIM computation
-        left_img = (left_img * 255).astype(np.uint8)
-        right_img = (right_img * 255).astype(np.uint8)
-
+        assert left_img.shape == right_img.shape, "Images must have same shape"
         h, w = left_img.shape
 
-        overlap_px = int(w * real_overlap_ratio)
-        blend_px = int(w * blending_ratio)
-        trim_px = overlap_px - blend_px
-
-        # Extract overlapping bands from each image
-        right_cropped = right_img[:, trim_px:]
-        left_overlap = left_img[:, w - blend_px:w]
-
-        best_dy = 0
         best_score = -1.0
+        best_offset_y = 0
 
-        for dy in range(-max_dy, max_dy + 1):
-            # Apply vertical shift to right image
-            shifted = np.roll(right_cropped, dy, axis=0)
-            right_overlap = shifted[:, :blend_px]
+        for dy in range(-max_shift, max_shift + 1):
+            if dy < 0:
+                l_patch = left_img[:h + dy, :]
+                r_patch = right_img[-dy:, :]
+            elif dy > 0:
+                l_patch = left_img[dy:, :]
+                r_patch = right_img[:h - dy, :]
+            else:
+                l_patch = left_img
+                r_patch = right_img
 
-            if left_overlap.shape != right_overlap.shape or right_overlap.shape[1] < min_valid_width:
+            if l_patch.shape[0] < 10:
                 continue
 
-            try:
-                score = ssim(left_overlap, right_overlap, data_range=255)
-            except:
-                continue
-
+            score = ssim(
+                l_patch.astype(np.float32) / 255.0,
+                r_patch.astype(np.float32) / 255.0,
+                data_range=1.0
+            )
             if score > best_score:
                 best_score = score
-                best_dy = dy
+                best_offset_y = dy
 
-        return best_dy
-
-    def compute_overlap_ssim(self, left: np.ndarray, right: np.ndarray, max_offset: int = 300) -> tuple[float, int]:
+        return best_offset_y
+    def estimate_overlap_ssim_partial(self, left_img, right_img, max_offset=200):
         """
-        Estimate horizontal overlap (%) using SSIM matching across shifts.
+        Compute horizontal overlap (%) between two grayscale images by comparing
+        only the right edge of left_img and the left edge of right_img using SSIM.
 
         Args:
-            left (np.ndarray): Left grayscale image (H x W).
-            right (np.ndarray): Right grayscale image (H x W).
-            max_offset (int): Max horizontal pixel shift to evaluate.
+            left_img (np.ndarray): Left grayscale image.
+            right_img (np.ndarray): Right grayscale image.
+            max_offset (int): Maximum horizontal shift to test (in pixels).
 
         Returns:
-            tuple[float, int]: (overlap_ratio, best_offset) maximizing SSIM.
+            overlap_pct: overlap percentage (0–1).
         """
-        left = left.astype(np.float32) / 255.0
-        right = right.astype(np.float32) / 255.0
+        assert left_img.shape == right_img.shape, "Images must have the same size"
+        h, w = left_img.shape
 
-        best_offset = 0
+        # Extract only the right edge of left_img and left edge of right_img
+        left_edge = left_img[:, w - max_offset : w]
+        right_edge = right_img[:, :max_offset]
+
         best_score = -1.0
+        best_offset = 0
 
-        for dx in range(-max_offset, max_offset):
-            if dx < 0:
-                l_patch = left[:, :dx]
-                r_patch = right[:, -dx:]
-            else:
-                l_patch = left[:, dx:]
-                r_patch = right[:, :-dx] if dx != 0 else right
+        # Test dx from 1 to max_offset
+        for dx in range(1, min(max_offset, w) + 1):
+            l_patch = left_edge[:, -dx:]
+            r_patch = right_edge[:, :dx]
 
-            if l_patch.shape[1] < 10 or r_patch.shape[1] < 10 or l_patch.shape[1] != r_patch.shape[1]:
+            if l_patch.shape[1] < 10 or r_patch.shape[1] < 10:
                 continue
 
-            try:
-                score = ssim(l_patch, r_patch, data_range=1.0)
-            except Exception as e:
-                print(f"❌ SSIM computation failed at offset {dx}: {e}")
-                continue
+            score = ssim(
+                l_patch.astype(np.float32) / 255.0,
+                r_patch.astype(np.float32) / 255.0,
+                data_range=1.0
+            )
 
             if score > best_score:
                 best_score = score
                 best_offset = dx
 
-        overlap_pct = abs(best_offset) / left.shape[1]
+        overlap_px = best_offset
+        overlap_pct = overlap_px / w
+
         return overlap_pct
+
+
+    
 
 
     def save_calibration_result(self, overlap_pct: float, dy: int, file_path: str = "/home/rcasal/ros2_ws/src/dual_t265_stitching/overlap_calibration.txt"):

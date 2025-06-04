@@ -78,22 +78,22 @@ class StitchingNode(Node):
             D_cam2 = D_cam2,
             fov_h2 = fov_h2,
             fov_v2 = fov_v2,
-            overlaping_region=0.299,
-            blending_ratio = 0.08,
-            vertical_correction=14
+            overlaping_region=0.135,
+            blending_ratio = 0.1,
+            vertical_correction=1
         )
 
         # Subscribe to fisheye cameras topics
         self.subscription_left_camera = self.create_subscription(
             Image,
-            "/camera1/fisheye_left",
+            "/camera2/fisheye_left",
             self.image_callback_left,
             qos_profile_sensor_data
         )
     
         self.subscription_right_camera = self.create_subscription(
             Image,
-            "/camera2/fisheye_left",
+            "/camera1/fisheye_left",
             self.image_callback_right,
             qos_profile_sensor_data
         )
@@ -156,8 +156,8 @@ class StitchingNode(Node):
 
         try:
             # Save raw images for offline testing/debugging
-            #cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/left2.png", self.last_left)
-            #cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/right2.png", self.last_right)
+            cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/final_left.png", self.last_left)
+            cv2.imwrite("/home/rcasal/ros2_ws/src/dual_t265_stitching/final_right.png", self.last_right)
 
             stiched_image = self.dual_stitcher.stitch_blend_optimized(self.last_left, self.last_right)
     

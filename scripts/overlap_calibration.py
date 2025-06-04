@@ -148,7 +148,7 @@ class OverlapCalibrationNode(Node):
         right = self.last_right
 
         # Overlap percentage of both frames
-        overlap_pct = self.dual_stitcher.compute_overlap_ssim(left,right)
+        overlap_pct = self.dual_stitcher.estimate_overlap_ssim_partial(left,right)
 
         # Misalignment in the y-axis
         best_dy = self.dual_stitcher.estimate_vertical_shift_ssim(left, right, overlap_pct)
@@ -156,6 +156,7 @@ class OverlapCalibrationNode(Node):
 
         self.get_logger().info(f"📐 Estimated horizontal overlap: {overlap_pct:.2%}")
         self.get_logger().info(f"↕️  Estimated vertical shift (dy): {best_dy} px")
+        
 
         # Save calibration in a .txt, file_path = './your_txt_destination' 
         self.dual_stitcher.save_calibration_result(overlap_pct, best_dy)

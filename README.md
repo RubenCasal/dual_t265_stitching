@@ -203,10 +203,28 @@ ros2 run dual_t265_stitching stitcher_node.py
 
 #### 2 realsense t265 cameras setup
 <p align="center">
-<img src="./readme_images/setup.jpg" alt="Stitching workflow" width="450">
+<img src="./readme_images/setup.jpg" alt="Stitching workflow" width="350">
 </p>
 
 #### Stitching video
 <p align="center">
 <img src="./readme_images/final_result.gif" alt="Stitching workflow" width="650">
 </p>
+
+#### Performance Notes
+
+* **Dewarping Time (per frame):** `2.50 – 2.60 ms`
+* **Stitching Time (2 frames):** `1.40 – 1.75 ms`
+* **Total Processing Time:** `3.70 – 4.20 ms`
+
+
+#### Usage Notes
+
+* Both cameras **must be aligned on the same horizontal plane** for optimal results.
+* This implementation is designed for **grayscale fisheye images (`mono8`)**, not RGB.
+* You must provide **intrinsic (`K`) and distortion (`D`) matrices** for both cameras.
+* The calibration node provides a **good initial estimate** for vertical alignment and overlap,
+  but **manual fine-tuning** may still be required to achieve optimal stitching quality.
+
+
+

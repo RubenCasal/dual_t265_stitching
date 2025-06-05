@@ -194,7 +194,7 @@ ros2 run dual_t265_stitching stitcher_node.py
 </div>
 
 
-#### Dual Stitching Workflow
+#### Stitching Workflow
 <div align="center">
 <img src="./readme_images/stitching_workflow.png" alt="Stitching workflow" width="650">
 </div>

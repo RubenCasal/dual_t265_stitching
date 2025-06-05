@@ -60,7 +60,6 @@ It iteratively shifts the overlapping edge patches over a specified max_offset r
 
 <div align="center">
 <img src="./readme_images/calibrate_overlaping.png" alt="Calculate Overlaping Region" width="650">
- <em>Obtain the duplicated area of the 2 images/em>
 </div>
 
 ---
@@ -80,7 +79,7 @@ Once the horizontal and vertical alignment parameters are estimated, this method
 
 <div align="center">
 <img src="./readme_images/calibration_file.png" alt="Calibration file" width="450">
- <em>File with the values of the calibration/em>
+
 </div>
 
 
@@ -105,10 +104,6 @@ This class implements multiple fisheye dewarping methods using precomputed looku
 ### `build_partial_equirectangular_map`
 
 This method generates an undistortion map to convert a fisheye image into a partial equirectangular projection (ERP), useful for panoramic or wide-angle image processing pipelines.
-<div align="center">
-  <img src="./readme_images/calibration_workflow.png" width="650"><br>
-  <em>Figura 1. Esquema del proceso de calibración.</em>
-</div>
 
 Unlike a full ERP that covers 360° horizontally and 180° vertically, this method maps only a selected field of view (`fov_deg`) into a 2D plane, producing a compact and computationally efficient representation. The generated remap matrices are intended to be used with `cv2.remap()`.
 
@@ -133,7 +128,6 @@ Unlike a full ERP that covers 360° horizontally and 180° vertically, this meth
 
 <div align="center">
 <img src="./readme_images/projection_explanation.png" alt="Diagram equirectangular proyection" width="600">
- <em>Equirectangular proyection/em>
 </div>
 
 
@@ -152,7 +146,6 @@ This method is optimized for real-time performance.
 
 <div align="center">
 <img src="./readme_images/equirectangular_proyection.gif" alt="Equirectangular_proyeciton" width="600">
- <em>Equirectangular proyection</em>
 </div>
 
 
@@ -179,7 +172,6 @@ This method ensures both geometric alignment and photometric consistency, minimi
 
 <div align="center">
 <img src="./readme_images/stitching.gif" alt="Stitching" width="600">
- <em>Stitching 2 dewarped images</em>
 </div>
 
 
@@ -199,23 +191,22 @@ ros2 run dual_t265_stitching stitcher_node.py
 #### Calibration Workflow
 <div align="center">
   <img src="./readme_images/calibration_workflow.png" width="650"><br>
-  <em>Calculate overlaping area and vertical misalignment process</em>
 </div>
 
 
 #### Dual Stitching Workflow
 <div align="center">
 <img src="./readme_images/stitching_workflow.png" alt="Stitching workflow" width="650">
-  <em>Stitch 2 fisheye images process</em>
 </div>
 
-# Final Result
+## Final Result
 
-
+#### 2 realsense t265 cameras setup
 <p align="center">
 <img src="./readme_images/setup.jpg" alt="Stitching workflow" width="450">
 </p>
 
+#### Stitching video
 <p align="center">
 <img src="./readme_images/final_result.gif" alt="Stitching workflow" width="650">
 </p>
